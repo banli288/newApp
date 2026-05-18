@@ -1,0 +1,18 @@
+:root {
+  --primary: #ee0a24;
+  --text: #333;
+  --text-secondary: #666;
+  --text-light: #999;
+  --bg: #f5f5f5;
+  --white: #fff;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  height: 100%;
+}
