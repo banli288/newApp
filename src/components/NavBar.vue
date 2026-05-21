@@ -34,7 +34,7 @@ const activeIndex = ref(3);
   margin: 0 10px;
 }
 .nav span.active {
-  color: rgb(226, 101, 12);
+  color: aliceblue;
   background-color: rgb(255, 168, 105);
 }
 </style>
