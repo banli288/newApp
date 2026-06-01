@@ -4,28 +4,32 @@
       <p>消息</p>
     </div>
     <!-- //tab栏切换 -->
-    <van-tabs v-model:active="active">
+    <van-tabs v-model:active="active" sticky :offset-top="50">
       <van-tab title="私信">
         <van-cell-group>
-          <van-cell v-for="item in messageList" :key="item.id">
+          <van-cell
+            v-for="item in messageList"
+            :key="item.id"
+            @click="router.push('/chat')"
+          >
             <van-swipe-cell>
               <div class="container">
-                <van-badge :content="item.unread">
+                <van-badge :content="item.unreadCount">
                   <div class="child" />
                   <van-image
                     round
                     width="4rem"
                     height="4rem"
-                    src="item.avatar"
+                    src="item.merchantLogo"
                   />
                 </van-badge>
                 <div class="goods-card">
                   <div class="goods-card-left">
-                    <p>{{ item.name }}</p>
+                    <p>{{ item.merchantName }}</p>
                     <p>{{ item.lastMessage }}</p>
                   </div>
                   <div class="goods-card-right">
-                    <p>{{ item.time }}</p>
+                    <p>{{ item.lastMessageTime }}</p>
                   </div>
                 </div>
               </div>
@@ -62,60 +66,16 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-
+import { onMounted, ref } from "vue";
+import { getMessage } from "../../api/message";
+import { useRouter } from "vue-router";
+const router = useRouter();
 const active = ref(0);
 
-const messageList = ref([
-  {
-    id: 1,
-    name: "华为官方旗舰店",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-    lastMessage: "亲，您的订单已发货，请注意查收~",
-    time: "12:30",
-    unread: 3,
-  },
-  {
-    id: 2,
-    name: "小米之家",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-    lastMessage: "感谢您的好评，期待下次光临！",
-    time: "昨天",
-    unread: 0,
-  },
-  {
-    id: 3,
-    name: "Nike运动旗舰店",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-    lastMessage: "这款鞋有42码的库存吗？",
-    time: "昨天",
-    unread: 1,
-  },
-  {
-    id: 4,
-    name: "三只松鼠旗舰店",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-    lastMessage: "满199减50活动进行中，快来选购吧！",
-    time: "周一",
-    unread: 0,
-  },
-  {
-    id: 5,
-    name: "优衣库官方店",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-    lastMessage: "您咨询的羽绒服已补货，尺码齐全",
-    time: "05/15",
-    unread: 5,
-  },
-  {
-    id: 6,
-    name: "苹果授权专营店",
-    avatar: "https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg",
-    lastMessage: "iPhone 16 Pro Max 预约成功",
-    time: "05/14",
-    unread: 0,
-  },
-]);
+const messageList = ref([]);
+onMounted(async () => {
+  messageList.value = await getMessage();
+});
 
 const notifyList = ref([
   {
@@ -168,7 +128,7 @@ const notifyList = ref([
   height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* overflow: hidden; */
 }
 
 .message-page .van-tabs {
@@ -184,7 +144,11 @@ const notifyList = ref([
   justify-content: center;
   background-color: rgb(255 118 20);
   color: aliceblue;
+  position: sticky; /* 滚动到顶部时自动吸住 */
+  top: 0;
+  z-index: 100;
 }
+
 .nav p {
   padding: 10px 0;
 }

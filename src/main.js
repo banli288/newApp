@@ -4,6 +4,9 @@ import { createPinia } from "pinia";
 import "./style.css";
 import "./assets/styles/reset.css";
 import "./assets/styles/global.css";
+import "./assets/iconfont/iconfont.css";
+import "./assets/iconfont/iconfont.js";
+
 // Vant 组件按需引入（推荐）
 import Vant from "vant";
 import "vant/lib/index.css";

@@ -11,4 +11,10 @@ import TabBar from "@/components/TabBar.vue";
 #app {
   padding-bottom: 50px; /* TabBar 的高度 */
 }
+:deep(.van-tabbar) {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
 </style>
