@@ -1,10 +1,5 @@
 import request from "@/utils/request";
 
-export const patchUserAddress = () => request.patch("/user/addresses/{id}");
-
-export const deleteUserAddress = () => request.delete("/user/addresses/{id}");
-
-export const deleteUserFav = () => request.delete("/user/favorites/{id}");
 //get
 export function getUserInfo() {
   return request({

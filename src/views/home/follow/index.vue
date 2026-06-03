@@ -1,7 +1,7 @@
 <template>
   <div class="follow">
     <div class="cardList" v-for="shop in shopList" :key="shop.id">
-      <div class="cardName">
+      <div class="cardName" @click="router.push('/merchant')">
         <div class="goods-card-left">
           <img :src="shop.avatar" alt="" />
           <div>
@@ -10,36 +10,29 @@
           </div>
         </div>
         <div class="goods-card-right">
-          <button
-            :class="{ followed: shop.isFollowed }"
-            @click="shop.isFollowed = !shop.isFollowed"
-          >
+          <button :class="{ followed: shop.isFollowed }" @click="follow(shop)">
             <span>{{ shop.isFollowed ? "已关注" : "关注" }}</span>
           </button>
         </div>
       </div>
-      <!-- <div class="swiper">
-        <swiper
-          class="card-swiper"
-          :display-multiple-items="1"
-          next-margin="40rpx"
-          previous-margin="20rpx"
-          circular
-          :autoplay="false"
-        >
-          <swiper-item v-for="item in shop.products" :key="item.id">
-            <view class="card-item">
-              <image :src="item.image" alt="" />
-            </view>
-          </swiper-item>
-        </swiper>
-      </div> -->
     </div>
   </div>
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
 import { ref } from "vue";
+
+const router = useRouter();
+
+const follow = (shop) => {
+  shop.isFollowed = !shop.isFollowed;
+  if (shop.isFollowed) {
+    shop.fans += 1;
+  } else {
+    shop.fans -= 1;
+  }
+};
 
 const shopList = ref([
   {

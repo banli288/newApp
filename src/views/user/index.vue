@@ -5,16 +5,14 @@
         <img src="https://picsum.photos/id/64/200/200" alt="avatar" />
       </div>
       <div class="userMessage">
-        <p>宠物爱好者</p>
-        <p>id:234324235</p>
+        <p>{{ userMessage.name }}</p>
+        <p>id:{{ userMessage.balance }}</p>
       </div>
     </div>
     <div class="userOrder">
-      <div class="order1">
+      <div class="order1" @click="router.push('/allOrder')">
         <span>订单</span>
-        <span
-          >全部订单<van-icon name="arrow" @click="router.push('/allOrder')"
-        /></span>
+        <span>全部订单<van-icon name="arrow" /></span>
       </div>
       <div class="order2">
         <div @click="router.push('/orderPay')">
@@ -61,7 +59,14 @@
 
 <script setup>
 import { useRouter } from "vue-router";
+import { getUserInfo } from "../../api/user";
+import { onMounted, ref } from "vue";
+
 const router = useRouter();
+const userMessage = ref({});
+onMounted(async () => {
+  userMessage.value = await getUserInfo();
+});
 </script>
 
 <style scoped>

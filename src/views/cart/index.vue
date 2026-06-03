@@ -2,9 +2,9 @@
   <div class="nav">
     <p>购物车</p>
   </div>
-  <div class="check-all">
+  <div class="check-all" @click="isManage = !isManage">
     <van-icon name="apps-o" />
-    <span>管理</span>
+    <span>{{ isManage ? "完成" : "管理" }}</span>
   </div>
   <div class="background">
     <div class="cartList" v-for="shop in cartData" :key="shop.merchantId">
@@ -43,7 +43,8 @@
     </div>
     <div class="submit">
       <van-submit-bar
-        :price="3050"
+        v-if="!isManage"
+        :price="totalPrice"
         button-text="提交订单"
         @submit="router.push('/close')"
         style="bottom: 50px"
@@ -52,6 +53,15 @@
         <template #tip>
           你的收货地址不支持配送, <span @click="onClickLink">修改地址</span>
         </template>
+      </van-submit-bar>
+      <van-submit-bar
+        v-else
+        button-text="删除"
+        @submit="onDelete"
+        style="bottom: 50px"
+        class="cart-submit-bar"
+      >
+        <van-checkbox v-model="isAllChecked">全选</van-checkbox>
       </van-submit-bar>
     </div>
   </div>
@@ -65,15 +75,63 @@ import { getCartList, postCart, patchCart, deleteCart } from "../../api/cart";
 const checked = ref(true);
 const router = useRouter();
 const cartData = ref([]);
+const isManage = ref(false);
 
-const onShopCheck = () => {};
-const onItemCheck = () => {};
+const isAllChecked = computed({
+  get() {
+    if (!cartData.value.length) return false;
+    return cartData.value.every(
+      (shop) => shop.checked && shop.items.every((item) => item.checked)
+    );
+  },
+  set(value) {
+    cartData.value.forEach((shop) => {
+      shop.checked = value;
+      shop.items.forEach((item) => {
+        item.checked = value;
+      });
+    });
+  },
+});
+
+const onShopCheck = (shop) => {
+  shop.items.forEach((item) => {
+    item.checked = shop.checked;
+  });
+};
+const onItemCheck = (shop) => {
+  shop.checked = shop.items.every((item) => item.checked);
+};
+const totalPrice = computed(() => {
+  let total = 0;
+  cartData.value.forEach((shop) => {
+    shop.items.forEach((item) => {
+      if (item.checked) {
+        total += item.product.price * item.quantity;
+      }
+    });
+  });
+  return Math.round(total * 100);
+});
 
 onMounted(async () => {
   cartData.value = await getCartList();
 });
 
-// const checkedAll=
+const onDelete = async () => {
+  const selectCart = [];
+  cartData.value.forEach((shop) => {
+    shop.items.forEach((item) => {
+      if (item.checked) selectCart.push(item.id);
+    });
+  });
+  // console.log("要删除的ID:", selectCart);
+
+  if (selectCart.length === 0) return;
+  //删除接口
+  const deleteManage = selectCart.map((id) => deleteCart(id));
+  await Promise.all(deleteManage);
+};
 </script>
 
 <style scoped>
@@ -142,5 +200,11 @@ span {
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+}
+/* .submit :deep(.van-checkbox) {
+  margin-left: 16px;
+} */
+:deep(.cart-submit-bar .van-checkbox) {
+  margin-right: 240px;
 }
 </style>

@@ -48,14 +48,18 @@
       </van-tab>
       <van-tab title="系统通知">
         <van-cell-group>
-          <van-cell v-for="item in notifyList" :key="item.id">
+          <van-cell
+            v-for="item in notifyList"
+            :key="item.id"
+            @click="router.push('/notify')"
+          >
             <div class="notify">
               <div class="notify-left">
                 <p>{{ item.title }}</p>
                 <p>{{ item.content }}</p>
               </div>
               <div class="notify-right">
-                <p>{{ item.time }}</p>
+                <!-- <p>{{ item.time }}</p> -->
               </div>
             </div>
           </van-cell>
@@ -67,8 +71,9 @@
 
 <script setup>
 import { onMounted, ref } from "vue";
-import { getMessage } from "../../api/message";
 import { useRouter } from "vue-router";
+import { getMessage, getNotification, postMessage } from "../../api/message";
+
 const router = useRouter();
 const active = ref(0);
 
@@ -77,50 +82,10 @@ onMounted(async () => {
   messageList.value = await getMessage();
 });
 
-const notifyList = ref([
-  {
-    id: 1,
-    title: "订单发货通知",
-    content: "您的订单 #20260515001 已发货，预计3天内送达",
-    time: "12:45",
-    unread: true,
-  },
-  {
-    id: 2,
-    title: "优惠券到账",
-    content: "恭喜获得满200减30优惠券，有效期至05/31",
-    time: "10:20",
-    unread: true,
-  },
-  {
-    id: 3,
-    title: "退款成功",
-    content: "订单 #20260510008 退款 ¥99.00 已原路返回",
-    time: "昨天",
-    unread: false,
-  },
-  {
-    id: 4,
-    title: "活动提醒",
-    content: "618年中大促即将开启，提前加购享优先发货",
-    time: "昨天",
-    unread: false,
-  },
-  {
-    id: 5,
-    title: "账号安全",
-    content: "检测到新设备登录，如非本人操作请及时修改密码",
-    time: "05/15",
-    unread: false,
-  },
-  {
-    id: 6,
-    title: "会员升级",
-    content: "恭喜升级为黄金会员，享专属95折优惠",
-    time: "05/14",
-    unread: false,
-  },
-]);
+const notifyList = ref([]);
+onMounted(async () => {
+  notifyList.value = await getNotification();
+});
 </script>
 
 <style scoped>

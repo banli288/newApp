@@ -89,6 +89,17 @@ const routes = [
     path: "/chat",
     component: () => import("@/views/chat/index.vue"),
   },
+  {
+    path: "/notify",
+    component: () => import("@/views/notify/index.vue"),
+  },
+  {
+    path: "/service",
+    component: () => import("@/views/service/index.vue"),
+  }, {
+    path: "/merchant",
+    component: () => import("@/views/merchant/index.vue"),
+  },
   { path: "/login", component: () => import("@/views/login/index.vue") },
   { path: "/goods/:id", component: () => import("@/views/goods/index.vue") },
 ];

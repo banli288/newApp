@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户 ====================
+
+model User {
+  id        String   @id @default(cuid())
+  avatar    String?
+  name      String
+  level     Int      @default(0)
+  status    Int      @default(1)
+  balance   Float    @default(10000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  merchants        Merchant[]
+  notifications    Notification[]
+  cartItems        CartItem[]
+  orders           Order[]
+  addresses        Address[]
+  favorites        Favorite[]
+  sentMessages     Message[]      @relation("SentMessages")
+  receivedMessages Message[]      @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+// ==================== 商家/店铺 ====================
+
+model Merchant {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String?
+  description String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id])
+  products  Product[]
+  liveRooms LiveRoom[]
+  posts     Post[]
+  cartItems CartItem[]
+  orders    Order[]
+
+  @@map("merchants")
+}
+
+// ==================== 分类 ====================
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  icon      String?
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@map("categories")
+}
+
+// ==================== 商品 ====================
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  price       Float
+  images      Json
+  description String?
+  merchantId  String
+  categoryId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  merchant   Merchant    @relation(fields: [merchantId], references: [id])
+  category   Category    @relation(fields: [categoryId], references: [id])
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  favorites  Favorite[]
+
+  @@map("products")
+}
+
+// ==================== 轮播图 ====================
+
+model Carousel {
+  id        String   @id @default(cuid())
+  image     String
+  link      String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("carousels")
+}
+
+// ==================== 直播间 ====================
+
+model LiveRoom {
+  id         String   @id @default(cuid())
+  coverImage String
+  title      String
+  merchantId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@map("live_rooms")
+}
+
+// ==================== 图文贴 ====================
+
+model Post {
+  id         String   @id @default(cuid())
+  images     Json
+  content    String
+  merchantId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@map("posts")
+}
+
+// ==================== 私信 ====================
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+// ==================== 系统通知 ====================
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String // logistics / order / coupon / member
+  title     String
+  content   String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+// ==================== 购物车 ====================
+
+model CartItem {
+  id         String   @id @default(cuid())
+  quantity   Int      @default(1)
+  userId     String
+  productId  String
+  merchantId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  product  Product  @relation(fields: [productId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@map("cart_items")
+}
+
+// ==================== 订单 ====================
+
+model Order {
+  id          String   @id @default(cuid())
+  totalAmount Float
+  status      String // pending / paid / shipped / completed
+  userId      String
+  merchantId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id])
+  merchant Merchant    @relation(fields: [merchantId], references: [id])
+  items    OrderItem[]
+
+  @@map("orders")
+}
+
+// ==================== 订单商品 ====================
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// ==================== 收货地址 ====================
+
+model Address {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  address   String
+  isDefault Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("addresses")
+}
+
+// ==================== 收藏 ====================
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+  @@map("favorites")
+}

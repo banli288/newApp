@@ -8,7 +8,7 @@
     <div class="content-left">
       <div class="time">5月23日10:14</div>
       <div class="Merchant">
-        <img src="https://picsum.photos/id/40/200/250" alt="" />
+        <img src="" alt="" />
         <div class="info">
           <p class="mc">商家</p>
           <div class="message">
@@ -33,8 +33,8 @@
     <div class="content-right">
       <div class="time">5月23日10:14</div>
       <div class="buyer">
-        <div class="msg">的方式地方都是粉丝的方式的</div>
-        <img src="https://picsum.photos/id/40/200/250" alt="" />
+        <div class="msg">防辐射地方都是vs的</div>
+        <img src="" alt="" />
       </div>
     </div>
     <div class="keyword">
@@ -46,8 +46,21 @@
 </template>
 
 <script setup>
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
+import { getMessage } from "../../api/message";
 const router = useRouter();
+// const merchantId = route.query.merchantId;
+
+// const chatList = ref([]);
+// const chatInfo = ref({});
+
+// onMounted(async () => {
+//   const res = await getMessage(merchantId);
+//   chatList.value = res.messages;
+//   chatInfo.value = res.merchants;
+// });
 </script>
 
 <style scoped>
