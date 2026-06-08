@@ -23,6 +23,10 @@ const routes = [
     ],
   },
   {
+    path: "/cs",
+    component: () => import("@/views/cs/index.vue"),
+  },
+  {
     path: "/message",
     component: () => import("@/views/message/index.vue"),
     meta: { showTabBar: true },
@@ -38,7 +42,7 @@ const routes = [
     meta: { showTabBar: true },
   },
   {
-    path: "/card",
+    path: "/card/:id",
     component: () => import("@/views/card/index.vue"),
   },
   {
@@ -96,10 +100,16 @@ const routes = [
   {
     path: "/service",
     component: () => import("@/views/service/index.vue"),
-  }, {
-    path: "/merchant",
+  },
+  {
+    path: "/merchant/:id",
     component: () => import("@/views/merchant/index.vue"),
   },
+  {
+    path: "/increaseAddress",
+    component: () => import("@/views/increaseAddress/index.vue"),
+  },
+
   { path: "/login", component: () => import("@/views/login/index.vue") },
   { path: "/goods/:id", component: () => import("@/views/goods/index.vue") },
 ];

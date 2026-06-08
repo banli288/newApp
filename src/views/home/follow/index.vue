@@ -1,8 +1,8 @@
 <template>
   <div class="follow">
     <div class="cardList" v-for="shop in shopList" :key="shop.id">
-      <div class="cardName" @click="router.push('/merchant')">
-        <div class="goods-card-left">
+      <div class="cardName">
+        <div class="goods-card-left" @click="router.push('/merchant')">
           <img :src="shop.avatar" alt="" />
           <div>
             <p>{{ shop.shopName }}</p>
@@ -11,11 +11,17 @@
         </div>
         <div class="goods-card-right">
           <button :class="{ followed: shop.isFollowed }" @click="follow(shop)">
-            <span>{{ shop.isFollowed ? "已关注" : "关注" }}</span>
+            <span>{{ shop.isFollowed ? "已关注" : "+关注" }}</span>
           </button>
         </div>
       </div>
     </div>
+    <van-back-top
+      style="background-color: #ff870f"
+      class="custom"
+      right="15vw"
+      bottom="10vh"
+    ></van-back-top>
   </div>
 </template>
 
@@ -249,12 +255,14 @@ const shopList = ref([
   width: 60px;
   height: 30px;
   border-radius: 10px; /* 描边粗细、样式、颜色 */
+  color: white;
 }
 /* .goods-card-right button span {
   color: white;
 } */
 .goods-card-right button.followed {
   background-color: white;
-  border: 2px solid #ff7d32;
+  border: 1px solid #ff7d32;
+  color: black;
 }
 </style>

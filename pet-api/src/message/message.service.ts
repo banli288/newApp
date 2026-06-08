@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -49,7 +49,8 @@ export class MessageService {
 
       const conv = grouped.get(key)!;
       conv.messages.push(msg);
-      if (!isSender) conv.unreadCount++;
+      // 未读：对方发的 + 未标记已读
+      if (!isSender && !msg.readAt) conv.unreadCount++;
     }
 
     return Array.from(grouped.values());
@@ -60,6 +61,72 @@ export class MessageService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async markMessageAsRead(id: string, userId: string) {
+    const msg = await this.prisma.message.findFirst({
+      where: { id, receiverId: userId },
+    });
+    if (!msg) throw new NotFoundException('消息不存在');
+
+    return this.prisma.message.update({
+      where: { id },
+      data: { readAt: new Date() },
+    });
+  }
+
+  async markNotificationAsRead(id: string, userId: string) {
+    const notif = await this.prisma.notification.findFirst({
+      where: { id, userId },
+    });
+    if (!notif) throw new NotFoundException('通知不存在');
+
+    return this.prisma.notification.update({
+      where: { id },
+      data: { isRead: true },
+    });
+  }
+
+  async markAllNotificationsAsRead(userId: string) {
+    await this.prisma.notification.updateMany({
+      where: { userId, isRead: false },
+      data: { isRead: true },
+    });
+    return { success: true };
+  }
+
+  async getUnreadCount(userId: string) {
+    const [messageCount, notificationCount] = await Promise.all([
+      this.prisma.message.count({
+        where: { receiverId: userId, readAt: null },
+      }),
+      this.prisma.notification.count({
+        where: { userId, isRead: false },
+      }),
+    ]);
+    return { messageCount, notificationCount };
+  }
+
+  async deleteConversation(userId: string, merchantId: string) {
+    // 找到商家对应的用户
+    const merchant = await this.prisma.merchant.findUnique({
+      where: { id: merchantId },
+      select: { userId: true },
+    });
+    if (!merchant) throw new NotFoundException('商家不存在');
+
+    const otherUserId = merchant.userId;
+
+    await this.prisma.message.deleteMany({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
+        ],
+      },
+    });
+
+    return { success: true };
   }
 
   async sendMessage(senderId: string, receiverId: string, content: string) {

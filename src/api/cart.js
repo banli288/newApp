@@ -1,9 +1,29 @@
 import request from "@/utils/request";
 
-export const getCartList = () => request.get("/cart");
+export function getCartList() {
+  return request({
+    url: "/cart",
+    method: "get",
+  });
+}
 
-export const deleteCart = (id) => request.delete(`/cart/${id}`);
-
-export const postCart = () => request.post("/cart");
-
-export const patchCart = () => request.patch("/cart");
+export function deleteCart(id) {
+  return request({
+    url: `/cart/${id}`,
+    method: "delete",
+  });
+}
+export function postCart(productId, quantity = 1, merchantId) {
+  return request({
+    url: `/cart`,
+    method: "post",
+    data: { productId, quantity, merchantId },
+  });
+}
+export function patchCart(id, quantity) {
+  return request({
+    url: `/cart/${id}`,
+    method: "patch",
+    data: { quantity },
+  });
+}

@@ -6,6 +6,19 @@ const IMG = 'https://picsum.photos/id/237/200/300';
 
 async function main() {
   // ==================== 1. 清空数据（按外键依赖倒序） ====================
+  await prisma.afterSaleLog.deleteMany();
+  await prisma.afterSale.deleteMany();
+  await prisma.viewHistory.deleteMany();
+  await prisma.pointLog.deleteMany();
+  await prisma.signRecord.deleteMany();
+  await prisma.logisticsEvent.deleteMany();
+  await prisma.userCoupon.deleteMany();
+  await prisma.coupon.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.postComment.deleteMany();
+  await prisma.postLike.deleteMany();
+  await prisma.hotSearch.deleteMany();
+  await prisma.follow.deleteMany();
   await prisma.favorite.deleteMany();
   await prisma.cartItem.deleteMany();
   await prisma.orderItem.deleteMany();
@@ -14,6 +27,7 @@ async function main() {
   await prisma.message.deleteMany();
   await prisma.post.deleteMany();
   await prisma.liveRoom.deleteMany();
+  await prisma.productSpec.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.carousel.deleteMany();
@@ -124,21 +138,21 @@ async function main() {
       data: {
         id: 'prod-1', name: '皇家幼犬狗粮 2kg', price: 128.0,
         images: [IMG], description: '适合2-12个月幼犬，添加DHA促进脑部发育',
-        merchantId: merchant1.id, categoryId: dogFood.id,
+        brand: '皇家', merchantId: merchant1.id, categoryId: dogFood.id,
       },
     }),
     prisma.product.create({
       data: {
         id: 'prod-2', name: '全价冻干生骨肉 500g', price: 89.0,
         images: [IMG], description: '高蛋白低敏配方，适合全年龄段犬只',
-        merchantId: merchant1.id, categoryId: dogFood.id,
+        brand: '生生不息', merchantId: merchant1.id, categoryId: dogFood.id,
       },
     }),
     prisma.product.create({
       data: {
         id: 'prod-3', name: '无谷物三文鱼犬粮 3kg', price: 199.0,
         images: [IMG], description: '深海三文鱼配方，美毛护肤',
-        merchantId: merchant1.id, categoryId: dogFood.id,
+        brand: '渴望', merchantId: merchant1.id, categoryId: dogFood.id,
       },
     }),
     // 狗狗 - 零食
@@ -176,7 +190,7 @@ async function main() {
       data: {
         id: 'prod-8', name: '渴望全猫期猫粮 1.8kg', price: 258.0,
         images: [IMG], description: '85%动物成分，模拟自然饮食',
-        merchantId: merchant2.id, categoryId: catFood.id,
+        brand: '渴望', merchantId: merchant2.id, categoryId: catFood.id,
       },
     }),
     prisma.product.create({
@@ -190,7 +204,7 @@ async function main() {
       data: {
         id: 'prod-10', name: '冻干双拼猫粮 2kg', price: 159.0,
         images: [IMG], description: '冻干+膨化双拼，挑嘴猫也爱吃',
-        merchantId: merchant2.id, categoryId: catFood.id,
+        brand: '网易严选', merchantId: merchant2.id, categoryId: catFood.id,
       },
     }),
     // 猫咪 - 零食
@@ -249,6 +263,28 @@ async function main() {
   ]);
 
   console.log(`✔ 商品创建完成，共 ${products.length} 件`);
+
+  // ==================== 5b. 商品规格 ====================
+  await prisma.productSpec.createMany({
+    data: [
+      { id: 'spec-1', name: '重量', value: '2kg', price: 128.0, stock: 50, productId: 'prod-1' },
+      { id: 'spec-2', name: '重量', value: '5kg', price: 268.0, stock: 30, productId: 'prod-1' },
+      { id: 'spec-3', name: '重量', value: '500g', price: 89.0, stock: 100, productId: 'prod-2' },
+      { id: 'spec-4', name: '重量', value: '1.8kg', price: 258.0, stock: 40, productId: 'prod-8' },
+      { id: 'spec-5', name: '重量', value: '1.8kg', price: 159.0, stock: 60, productId: 'prod-10' },
+    ],
+  });
+
+  console.log('✔ 商品规格创建完成');
+
+  // ==================== 5c. 初始销量 ====================
+  await prisma.product.update({ where: { id: 'prod-1' }, data: { sales: 156 } });
+  await prisma.product.update({ where: { id: 'prod-4' }, data: { sales: 89 } });
+  await prisma.product.update({ where: { id: 'prod-8' }, data: { sales: 234 } });
+  await prisma.product.update({ where: { id: 'prod-11' }, data: { sales: 412 } });
+  await prisma.product.update({ where: { id: 'prod-14' }, data: { sales: 67 } });
+
+  console.log('✔ 初始销量设置完成');
 
   // ==================== 6. 轮播图 ====================
   await prisma.carousel.createMany({
@@ -368,6 +404,8 @@ async function main() {
       id: 'order-1',
       totalAmount: 218.0,
       status: 'shipped',
+      trackingNo: 'SF1234567890',
+      carrier: '顺丰速运',
       userId: defaultUser.id,
       merchantId: merchant1.id,
     },
@@ -408,6 +446,181 @@ async function main() {
   });
 
   console.log('✔ 收藏创建完成');
+
+  // ==================== 15. 关注店铺 ====================
+  await prisma.follow.createMany({
+    data: [
+      { id: 'follow-1', userId: defaultUser.id, merchantId: merchant1.id },
+      { id: 'follow-2', userId: defaultUser.id, merchantId: merchant2.id },
+    ],
+  });
+
+  console.log('✔ 关注店铺创建完成');
+
+  // ==================== 16. 已完成订单（用于评价） ====================
+  const order3 = await prisma.order.create({
+    data: {
+      id: 'order-3',
+      totalAmount: 128.0,
+      status: 'completed',
+      userId: defaultUser.id,
+      merchantId: merchant1.id,
+    },
+  });
+  await prisma.orderItem.createMany({
+    data: [
+      { id: 'oi-6', orderId: order3.id, productId: 'prod-1', quantity: 1, price: 128.0 },
+    ],
+  });
+
+  console.log('✔ 已完成订单创建完成');
+
+  // ==================== 17. 商品评价 ====================
+  await prisma.review.createMany({
+    data: [
+      { id: 'review-1', rating: 5, content: '质量很好，我家狗狗超爱吃！', userId: defaultUser.id, productId: 'prod-1', orderId: 'order-3' },
+      { id: 'review-2', rating: 4, content: '不错，就是包装有点简陋', userId: defaultUser.id, productId: 'prod-8', orderId: 'order-3' },
+    ],
+  });
+
+  // 更新商品平均评分
+  await prisma.product.update({ where: { id: 'prod-1' }, data: { avgRating: 5.0 } });
+  await prisma.product.update({ where: { id: 'prod-8' }, data: { avgRating: 4.0 } });
+
+  console.log('✔ 商品评价创建完成');
+
+  // ==================== 18. 帖子互动 ====================
+  await prisma.postLike.createMany({
+    data: [
+      { id: 'like-1', userId: defaultUser.id, postId: 'post-1' },
+      { id: 'like-2', userId: defaultUser.id, postId: 'post-2' },
+    ],
+  });
+
+  await prisma.postComment.createMany({
+    data: [
+      { id: 'comment-1', content: '太可爱了！求链接', userId: defaultUser.id, postId: 'post-1' },
+      { id: 'comment-2', content: '我家猫也超爱这个', userId: defaultUser.id, postId: 'post-2' },
+    ],
+  });
+
+  console.log('✔ 帖子互动创建完成');
+
+  // ==================== 19. 热门搜索词 ====================
+  await prisma.hotSearch.createMany({
+    data: [
+      { id: 'hot-1', keyword: '狗粮', sortOrder: 1 },
+      { id: 'hot-2', keyword: '猫粮', sortOrder: 2 },
+      { id: 'hot-3', keyword: '猫条', sortOrder: 3 },
+      { id: 'hot-4', keyword: '狗玩具', sortOrder: 4 },
+      { id: 'hot-5', keyword: '鱼缸', sortOrder: 5 },
+      { id: 'hot-6', keyword: '猫薄荷', sortOrder: 6 },
+      { id: 'hot-7', keyword: '冻干', sortOrder: 7 },
+      { id: 'hot-8', keyword: '猫砂', sortOrder: 8 },
+    ],
+  });
+
+  console.log('✔ 热门搜索词创建完成');
+
+  // ==================== 20. 优惠券 ====================
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  await prisma.coupon.createMany({
+    data: [
+      { id: 'coupon-1', name: '新人专享券', type: 'fixed', value: 20, minAmount: 100, startTime: now, endTime: nextMonth, total: 100, claimed: 5 },
+      { id: 'coupon-2', name: '满200减50', type: 'fixed', value: 50, minAmount: 200, startTime: now, endTime: nextMonth, total: 200, claimed: 30 },
+      { id: 'coupon-3', name: '全场9折券', type: 'percent', value: 0.9, minAmount: 50, startTime: now, endTime: nextMonth, total: 500, claimed: 120 },
+      { id: 'coupon-4', name: '猫咪专区85折', type: 'percent', value: 0.85, minAmount: 80, startTime: now, endTime: nextMonth, total: 100, claimed: 15 },
+    ],
+  });
+
+  // 用户领取的优惠券
+  await prisma.userCoupon.createMany({
+    data: [
+      { id: 'uc-1', userId: defaultUser.id, couponId: 'coupon-1', status: 'unused' },
+      { id: 'uc-2', userId: defaultUser.id, couponId: 'coupon-2', status: 'unused' },
+      { id: 'uc-3', userId: defaultUser.id, couponId: 'coupon-3', status: 'used', usedAt: new Date(now.getTime() - 86400000) },
+    ],
+  });
+
+  console.log('✔ 优惠券创建完成');
+
+  // ==================== 21. 物流事件 ====================
+  await prisma.logisticsEvent.createMany({
+    data: [
+      { id: 'log-1', orderId: 'order-1', status: 'created', location: '深圳仓库', detail: '商家已发货，等待快递员揽收', createdAt: new Date(now.getTime() - 172800000) },
+      { id: 'log-2', orderId: 'order-1', status: 'picked', location: '深圳转运中心', detail: '快递员已揽收，包裹已到达深圳转运中心', createdAt: new Date(now.getTime() - 86400000) },
+      { id: 'log-3', orderId: 'order-1', status: 'in_transit', location: '长沙转运中心', detail: '包裹已到达长沙转运中心，正在分拣', createdAt: new Date(now.getTime() - 43200000) },
+      { id: 'log-4', orderId: 'order-1', status: 'arrived', location: '湘潭市', detail: '包裹已到达湘潭市派送站点，准备派送', createdAt: new Date(now.getTime() - 7200000) },
+    ],
+  });
+
+  console.log('✔ 物流事件创建完成');
+
+  // ==================== 22. 签到记录 ====================
+  const today = new Date();
+  const getDateStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  await prisma.signRecord.createMany({
+    data: [
+      { id: 'sign-1', userId: defaultUser.id, points: 5, streak: 1, signDate: getDateStr(new Date(today.getTime() - 3 * 86400000)) },
+      { id: 'sign-2', userId: defaultUser.id, points: 6, streak: 2, signDate: getDateStr(new Date(today.getTime() - 2 * 86400000)) },
+      { id: 'sign-3', userId: defaultUser.id, points: 7, streak: 3, signDate: getDateStr(new Date(today.getTime() - 1 * 86400000)) },
+    ],
+  });
+
+  // 更新用户积分和连续签到
+  await prisma.user.update({
+    where: { id: defaultUser.id },
+    data: { points: 18, signDays: 3, lastSignAt: new Date(today.getTime() - 86400000) },
+  });
+
+  await prisma.pointLog.createMany({
+    data: [
+      { id: 'pl-1', userId: defaultUser.id, type: 'earn_sign', amount: 5, description: '第1天连续签到，获得5积分' },
+      { id: 'pl-2', userId: defaultUser.id, type: 'earn_sign', amount: 6, description: '第2天连续签到，获得6积分' },
+      { id: 'pl-3', userId: defaultUser.id, type: 'earn_sign', amount: 7, description: '第3天连续签到，获得7积分' },
+    ],
+  });
+
+  console.log('✔ 签到积分创建完成');
+
+  // ==================== 23. 浏览记录 ====================
+  await prisma.viewHistory.createMany({
+    data: [
+      { id: 'vh-1', userId: defaultUser.id, productId: 'prod-1' },
+      { id: 'vh-2', userId: defaultUser.id, productId: 'prod-8' },
+      { id: 'vh-3', userId: defaultUser.id, productId: 'prod-3' },
+      { id: 'vh-4', userId: defaultUser.id, productId: 'prod-10' },
+      { id: 'vh-5', userId: defaultUser.id, productId: 'prod-14' },
+    ],
+  });
+
+  console.log('✔ 浏览记录创建完成');
+
+  // ==================== 24. 售后记录 ====================
+  const afterSale1 = await prisma.afterSale.create({
+    data: {
+      id: 'as-1',
+      orderId: 'order-2',
+      type: 'refund',
+      reason: '不想要了，还没发货',
+      refundAmount: 302.0,
+      status: 'pending',
+    },
+  });
+
+  await prisma.afterSaleLog.create({
+    data: {
+      id: 'asl-1',
+      afterSaleId: afterSale1.id,
+      status: 'pending',
+      detail: '售后申请已提交，等待审核',
+    },
+  });
+
+  console.log('✔ 售后记录创建完成');
 
   console.log('\n🎉 Seed 数据填充完毕！');
 }

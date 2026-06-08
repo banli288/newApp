@@ -19,17 +19,26 @@ export function getUserOrder() {
     method: "get",
   });
 }
-export function getUserFav() {
+export function getUserFav(page = 1, limit = 10) {
   return request({
     url: "/user/favorites",
     method: "get",
+    params: { page: 1, limit: 10 },
   });
 }
+export function getProductDetail(id) {
+  return request({
+    url: `/home/products/${id}`,
+    method: "get",
+  });
+}
+
 //post
-export function postUserAddress() {
+export function postUserAddress(data) {
   return request({
     url: "/user/addresses",
     method: "post",
+    data,
   });
 }
 export function postUserOrder() {
@@ -45,22 +54,23 @@ export function postUserFav() {
   });
 }
 //patch
-export function patchUserAddress(id) {
+export function patchUserAddress(id, data) {
   return request({
-    url: "/user/addresses/{id}",
+    url: `/user/addresses/${id}`,
     method: "patch",
+    data,
   });
 }
 //delete
 export function deleteUserAddress(id) {
   return request({
-    url: "/user/addresses/{id}",
+    url: `/user/addresses/${id}`,
     method: "delete",
   });
 }
 export function deleteUserFav(id) {
   return request({
-    url: "/user/favorites/{id}",
+    url: `/user/favorites/${id}`,
     method: "delete",
   });
 }

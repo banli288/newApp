@@ -24,5 +24,11 @@ export function paginationParams(query: PaginationQuery) {
   return {
     skip: (page - 1) * limit,
     take: limit,
+    page,
+    limit,
   };
+}
+
+export function paginatedResponse(items: any[], total: number, page: number, limit: number) {
+  return { items, total, page, limit };
 }

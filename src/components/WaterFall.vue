@@ -1,7 +1,12 @@
 <template>
   <div class="waterfall">
-    <div class="item" v-for="item in List" :key="item.id">
-      <img :src="item.image" />
+    <div
+      class="item"
+      v-for="item in List"
+      :key="item.id"
+      @click="routerCard(item.id)"
+    >
+      <img :src="item.images" />
       <p>{{ item.name }}</p>
       <div class="item-span">
         <span>￥{{ item.price }}</span>
@@ -12,13 +17,20 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 defineProps({
   List: {
     type: Array,
     required: true,
   },
 });
+
+const routerCard = (id) => {
+  router.push(`/card/${id}`);
+};
 </script>
 
 <style scoped>

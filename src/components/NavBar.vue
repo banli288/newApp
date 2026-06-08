@@ -36,7 +36,13 @@ const tabs = [
 const activeIndex = ref(4);
 const tabChange = (index, path) => {
   activeIndex.value = index;
+
   router.push("/home/" + path);
+  //返回顶部
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 };
 //搜索栏
 const value = ref("");

@@ -10,7 +10,23 @@
     </div>
     <div class="categoryAll">
       <p>全部宝贝</p>
-      <WaterFall :List="imageList" />
+      <van-pull-refresh v-model="refreshing" @refresh="onRefresh">
+        <van-list
+          v-model:loading="loading"
+          :finished="finished"
+          finished-text="没有更多了"
+          loading-text="正在加载中"
+          @load="onLoad"
+        >
+          <WaterFall :List="imageList" />
+        </van-list>
+      </van-pull-refresh>
+      <van-back-top
+        style="background-color: #ff870f"
+        class="custom"
+        right="15vw"
+        bottom="10vh"
+      ></van-back-top>
     </div>
   </div>
 </template>
@@ -18,69 +34,28 @@
 <script setup>
 import NavBar from "../../../components/NavBar.vue";
 import WaterFall from "../../../components/WaterFall.vue";
+import { getGoodList, getImageList } from "@/api/home.js";
 import { useCounterStore } from "@/stores/counter";
 import { ref } from "vue";
 
 const { tabs } = useCounterStore();
+const imageList = ref([]);
+const page = ref(1);
+const limit = 10;
+const finished = ref(false);
+const loading = ref(false);
 
-const imageList = ref([
-  {
-    id: 1,
-    name: "英短蓝猫 幼猫",
-    price: "1200",
-    sales: "328",
-    image: "https://picsum.photos/id/40/200/250",
-  },
-  {
-    id: 2,
-    name: "金毛寻回犬 3个月",
-    price: "800",
-    sales: "512",
-    image: "https://picsum.photos/id/237/200/300",
-  },
-  {
-    id: 3,
-    name: "布偶猫 赛级",
-    price: "3500",
-    sales: "89",
-    image: "https://picsum.photos/id/1084/200/280",
-  },
-  {
-    id: 4,
-    name: "柯基犬 短腿",
-    price: "1500",
-    sales: "276",
-    image: "https://picsum.photos/id/1074/200/220",
-  },
-  {
-    id: 5,
-    name: "暹罗猫 粘人",
-    price: "900",
-    sales: "198",
-    image: "https://picsum.photos/id/1025/200/260",
-  },
-  {
-    id: 6,
-    name: "哈士奇 幼犬",
-    price: "1000",
-    sales: "445",
-    image: "https://picsum.photos/id/1062/200/300",
-  },
-  {
-    id: 7,
-    name: "美短虎斑",
-    price: "1100",
-    sales: "167",
-    image: "https://picsum.photos/id/1074/200/200",
-  },
-  {
-    id: 8,
-    name: "泰迪犬 卷毛",
-    price: "600",
-    sales: "623",
-    image: "https://picsum.photos/id/1025/200/240",
-  },
-]);
+//瀑布流
+const onLoad = async () => {
+  const res = await getImageList(page.value, limit);
+  imageList.value.push(...res);
+  loading.value = false;
+  if (res.length < limit) {
+    finished.value = ture;
+  } else {
+    page.value++;
+  }
+};
 </script>
 
 <style scoped>

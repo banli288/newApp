@@ -118,7 +118,7 @@ const iconList = [
     id: 2,
     icon: "wap-home-o",
     name: "回到首页",
-    path: "",
+    path: "/home",
   },
   {
     id: 3,
@@ -162,6 +162,9 @@ const iconList = [
   justify-content: space-between;
   padding: 15px;
   background-color: white;
+  position: sticky;
+  z-index: 100;
+  top: 0;
 }
 .order-left,
 .order-right {

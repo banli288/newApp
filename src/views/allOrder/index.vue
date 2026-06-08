@@ -43,7 +43,6 @@
                 </div>
                 {{ item.name }}
               </div>
-              <div></div>
             </div>
           </van-popup>
         </div>
@@ -53,23 +52,26 @@
       <p>全部订单</p>
       <van-divider style="border-color: #eee; margin: 1px" />
     </div>
-    <div class="orderCard">
-      <div class="cardName">宠物之家<van-icon name="arrow" /></div>
-      <div class="card">
+    <div class="orderCard" v-for="item in orderList" :key="item.id">
+      <div class="cardName" @click="goMerchant(item.merchant.id)">
+        {{ item.merchant.name }}<van-icon name="arrow" />
+      </div>
+      <div class="card" v-for="value in item.items" :key="value.id">
         <div class="card-left">
           <img
-            src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg"
+            :src="value.product.images"
             alt=""
+            @click="goCard(value.product.id)"
           />
           <div class="info">
-            <p>多功能分装瓶</p>
-            <p>旅行分装瓶</p>
+            <p>{{ value.product.name }}</p>
+            <p>{{ value.product.description }}</p>
             <p>极速退款 不支持七天无理由退款</p>
           </div>
         </div>
         <div class="card-right">
-          <p>￥123</p>
-          <p>x1</p>
+          <p>￥{{ value.price }}</p>
+          <p>{{ value.quantity }}</p>
         </div>
       </div>
       <div class="state">
@@ -99,12 +101,27 @@
 
 <script setup>
 import { useRouter } from "vue-router";
-import { ref } from "vue";
-const router = useRouter();
+import { getUserOrder } from "../../api/user";
+import { onMounted, ref } from "vue";
 
+onMounted(async () => {
+  orderList.value = await getUserOrder();
+});
+
+const router = useRouter();
+const orderList = ref([]);
 const showTop = ref(false);
+
 const showPopup = () => {
   showTop.value = true;
+};
+
+const goMerchant = (id) => {
+  router.push(`/merchant/${id}`);
+};
+
+const goCard = (id) => {
+  router.push(`/card/${id}`);
 };
 
 const iconList = [
@@ -118,7 +135,7 @@ const iconList = [
     id: 2,
     icon: "wap-home-o",
     name: "回到首页",
-    path: "",
+    path: "/home",
   },
   {
     id: 3,
@@ -162,6 +179,9 @@ const iconList = [
   justify-content: space-between;
   padding: 15px;
   background-color: white;
+  position: sticky;
+  z-index: 100;
+  top: 0;
 }
 .order-left,
 .order-right {

@@ -15,9 +15,12 @@ model User {
   name      String
   level     Int      @default(0)
   status    Int      @default(1)
-  balance   Float    @default(10000)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  balance    Float     @default(10000)
+  points     Int       @default(0)
+  signDays   Int       @default(0)
+  lastSignAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   merchants        Merchant[]
   notifications    Notification[]
@@ -25,6 +28,14 @@ model User {
   orders           Order[]
   addresses        Address[]
   favorites        Favorite[]
+  follows          Follow[]
+  reviews          Review[]
+  postLikes        PostLike[]
+  postComments     PostComment[]
+  userCoupons      UserCoupon[]
+  signRecords      SignRecord[]
+  pointLogs        PointLog[]
+  viewHistories    ViewHistory[]
   sentMessages     Message[]      @relation("SentMessages")
   receivedMessages Message[]      @relation("ReceivedMessages")
 
@@ -48,6 +59,7 @@ model Merchant {
   posts     Post[]
   cartItems CartItem[]
   orders    Order[]
+  follows   Follow[]
 
   @@map("merchants")
 }
@@ -77,16 +89,23 @@ model Product {
   price       Float
   images      Json
   description String?
+  brand       String?
+  sales       Int      @default(0)
+  viewCount   Int      @default(0)
+  avgRating   Float    @default(5.0)
   merchantId  String
   categoryId  String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  merchant   Merchant    @relation(fields: [merchantId], references: [id])
-  category   Category    @relation(fields: [categoryId], references: [id])
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-  favorites  Favorite[]
+  merchant   Merchant      @relation(fields: [merchantId], references: [id])
+  category   Category      @relation(fields: [categoryId], references: [id])
+  specs         ProductSpec[]
+  reviews       Review[]
+  viewHistories ViewHistory[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  favorites     Favorite[]
 
   @@map("products")
 }
@@ -130,6 +149,8 @@ model Post {
   updatedAt  DateTime @updatedAt
 
   merchant Merchant @relation(fields: [merchantId], references: [id])
+  likes    PostLike[]
+  comments PostComment[]
 
   @@map("posts")
 }
@@ -137,12 +158,13 @@ model Post {
 // ==================== 私信 ====================
 
 model Message {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   content    String
   senderId   String
   receiverId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
@@ -157,6 +179,7 @@ model Notification {
   type      String // logistics / order / coupon / member
   title     String
   content   String
+  isRead    Boolean  @default(false)
   userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -187,17 +210,25 @@ model CartItem {
 // ==================== 订单 ====================
 
 model Order {
-  id          String   @id @default(cuid())
-  totalAmount Float
-  status      String // pending / paid / shipped / completed
-  userId      String
-  merchantId  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(cuid())
+  totalAmount   Float
+  discountAmount Float   @default(0)
+  status        String // pending / paid / shipped / completed / cancelled
+  remark        String?
+  trackingNo    String?
+  carrier       String?
+  couponId      String?
+  userId        String
+  merchantId    String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  user     User        @relation(fields: [userId], references: [id])
-  merchant Merchant    @relation(fields: [merchantId], references: [id])
-  items    OrderItem[]
+  user            User            @relation(fields: [userId], references: [id])
+  merchant        Merchant        @relation(fields: [merchantId], references: [id])
+  items           OrderItem[]
+  reviews         Review[]
+  afterSales      AfterSale[]
+  logisticsEvents LogisticsEvent[]
 
   @@map("orders")
 }
@@ -208,13 +239,15 @@ model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
   productId String
+  specId    String?
   quantity  Int
   price     Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  order   Order   @relation(fields: [orderId], references: [id])
-  product Product @relation(fields: [productId], references: [id])
+  order   Order        @relation(fields: [orderId], references: [id])
+  product Product      @relation(fields: [productId], references: [id])
+  spec    ProductSpec? @relation(fields: [specId], references: [id])
 
   @@map("order_items")
 }
@@ -250,4 +283,231 @@ model Favorite {
 
   @@unique([userId, productId])
   @@map("favorites")
+}
+
+// ==================== 关注店铺 ====================
+
+model Follow {
+  id         String   @id @default(cuid())
+  userId     String
+  merchantId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+
+  @@unique([userId, merchantId])
+  @@map("follows")
+}
+
+// ==================== 商品规格 ====================
+
+model ProductSpec {
+  id        String   @id @default(cuid())
+  name      String
+  value     String
+  price     Float
+  stock     Int      @default(0)
+  productId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product    Product      @relation(fields: [productId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("product_specs")
+}
+
+// ==================== 商品评价 ====================
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  content   String?
+  images    Json?
+  userId    String
+  productId String
+  orderId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  order   Order   @relation(fields: [orderId], references: [id])
+
+  @@unique([userId, productId, orderId])
+  @@map("reviews")
+}
+
+// ==================== 帖子点赞 ====================
+
+model PostLike {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+  @@map("post_likes")
+}
+
+// ==================== 帖子评论 ====================
+
+model PostComment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@map("post_comments")
+}
+
+// ==================== 热门搜索词 ====================
+
+model HotSearch {
+  id        String   @id @default(cuid())
+  keyword   String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@unique([keyword])
+  @@map("hot_searches")
+}
+
+// ==================== 优惠券 ====================
+
+model Coupon {
+  id        String   @id @default(cuid())
+  name      String
+  type      String // fixed（满减）/ percent（折扣）
+  value     Float // 固定金额或折扣比例（如 0.85 = 85折）
+  minAmount Float // 最低消费门槛
+  startTime DateTime
+  endTime   DateTime
+  total     Int // 发放总量
+  claimed   Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userCoupons UserCoupon[]
+
+  @@map("coupons")
+}
+
+model UserCoupon {
+  id        String    @id @default(cuid())
+  userId    String
+  couponId  String
+  status    String    @default("unused") // unused / used / expired
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id])
+  coupon Coupon @relation(fields: [couponId], references: [id])
+
+  @@unique([userId, couponId])
+  @@map("user_coupons")
+}
+
+// ==================== 物流追踪 ====================
+
+model LogisticsEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  status    String // created / picked / in_transit / arrived / delivered
+  location  String?
+  detail    String
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("logistics_events")
+}
+
+// ==================== 签到记录 ====================
+
+model SignRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  points    Int
+  streak    Int
+  signDate  String   // 格式 YYYY-MM-DD，用于去重
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, signDate])
+  @@map("sign_records")
+}
+
+// ==================== 积分变动记录 ====================
+
+model PointLog {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String // earn_sign / earn_order / redeem_coupon
+  amount      Int // 正数=获得，负数=消耗
+  description String
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("point_logs")
+}
+
+// ==================== 浏览记录 ====================
+
+model ViewHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("view_histories")
+}
+
+// ==================== 售后申请 ====================
+
+model AfterSale {
+  id           String   @id @default(cuid())
+  orderId      String
+  type         String // refund / return_refund
+  reason       String
+  images       Json?
+  refundAmount Float
+  status       String   @default("pending") // pending / approved / rejected / returning / completed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  order Order          @relation(fields: [orderId], references: [id])
+  logs  AfterSaleLog[]
+
+  @@map("after_sales")
+}
+
+// ==================== 售后进度 ====================
+
+model AfterSaleLog {
+  id          String   @id @default(cuid())
+  afterSaleId String
+  status      String
+  detail      String
+  createdAt   DateTime @default(now())
+
+  afterSale AfterSale @relation(fields: [afterSaleId], references: [id])
+
+  @@map("after_sale_logs")
 }
