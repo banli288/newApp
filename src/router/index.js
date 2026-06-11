@@ -109,6 +109,11 @@ const routes = [
     path: "/increaseAddress",
     component: () => import("@/views/increaseAddress/index.vue"),
   },
+  {
+    path: "/logistic",
+    component: () => import("@/views/logistic/index.vue"),
+
+  },
 
   { path: "/login", component: () => import("@/views/login/index.vue") },
   { path: "/goods/:id", component: () => import("@/views/goods/index.vue") },

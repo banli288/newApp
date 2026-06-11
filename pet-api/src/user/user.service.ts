@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Product, ProductSpec } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationQuery, paginationParams, paginatedResponse } from '../common/pagination';
 import { CreateAddressDto } from './dto/create-address.dto';
@@ -160,15 +161,15 @@ export class UserService {
 
     const [products, specs] = await Promise.all([
       this.prisma.product.findMany({ where: { id: { in: productIds } } }),
-      specIds.length > 0 ? this.prisma.productSpec.findMany({ where: { id: { in: specIds } } }) : Promise.resolve([]),
+      specIds.length > 0 ? this.prisma.productSpec.findMany({ where: { id: { in: specIds } } }) : Promise.resolve([] as ProductSpec[]),
     ]);
 
     if (products.length !== productIds.length) {
       throw new BadRequestException('部分商品不存在');
     }
 
-    const productMap = new Map(products.map((p): [string, typeof p] => [p.id, p]));
-    const specMap = new Map(specs.map((s): [string, typeof s] => [s.id, s]));
+    const productMap = new Map<string, Product>(products.map((p) => [p.id, p]));
+    const specMap = new Map<string, ProductSpec>(specs.map((s) => [s.id, s]));
 
     // 2. 校验规格 + 计算总金额
     let totalAmount = 0;

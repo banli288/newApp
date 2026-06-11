@@ -103,7 +103,8 @@ const merchantData = ref({});
 const merchantId = route.params.id;
 
 onMounted(async () => {
-  imageList.value = await getImageList();
+  const res = await getImageList();
+  imageList.value = res.items;
 });
 
 onMounted(async () => {

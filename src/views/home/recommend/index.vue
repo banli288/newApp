@@ -47,7 +47,7 @@ onMounted(async () => {
 //瀑布流
 const onLoad = async () => {
   const res = await getImageList(page.value, limit);
-  imageList.value.push(...res);
+  imageList.value.push(...res.items);
   loading.value = false;
   if (res.length < limit) {
     finished.value = ture;

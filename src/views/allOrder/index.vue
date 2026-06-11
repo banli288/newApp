@@ -12,8 +12,8 @@
       </div>
       <div class="order-right">
         <div>
-          <van-icon name="apps-o" size="20px" />
-          <p>管理</p>
+          <van-icon v-if="!manage" name="apps-o" size="20px" />
+          <p @click="getManage">{{ manage ? "完成" : "管理" }}</p>
         </div>
         <div>
           <!-- <van-icon name="ellipsis" size="25px" /> -->
@@ -57,6 +57,11 @@
         {{ item.merchant.name }}<van-icon name="arrow" />
       </div>
       <div class="card" v-for="value in item.items" :key="value.id">
+        <van-checkbox
+          style="flex-shrink: 0"
+          v-if="manage"
+          v-model="item.checked"
+        ></van-checkbox>
         <div class="card-left">
           <img
             :src="value.product.images"
@@ -71,10 +76,10 @@
         </div>
         <div class="card-right">
           <p>￥{{ value.price }}</p>
-          <p>{{ value.quantity }}</p>
+          <p>x{{ value.quantity }}</p>
         </div>
       </div>
-      <div class="state">
+      <!-- <div class="state">
         <div class="state-left">
           <van-icon name="completed-o" />
           <p>已签收</p>
@@ -83,7 +88,7 @@
           <p>sdad</p>
           <van-icon name="arrow" />
         </div>
-      </div>
+      </div> -->
       <div class="pay">
         实付款
         <span>￥123</span>
@@ -91,10 +96,14 @@
       <div class="button">
         <div class="button-left">更多</div>
         <div class="button-right">
-          <button>查看物流</button>
+          <button @click="goLogistic">查看物流</button>
           <button>确认收货</button>
         </div>
       </div>
+    </div>
+    <div v-if="manage" class="delete">
+      <van-checkbox v-model="checkedList">全选</van-checkbox>
+      <button @click="deleteCheck">删除</button>
     </div>
   </div>
 </template>
@@ -105,12 +114,18 @@ import { getUserOrder } from "../../api/user";
 import { onMounted, ref } from "vue";
 
 onMounted(async () => {
-  orderList.value = await getUserOrder();
+  const res = await getUserOrder();
+  orderList.value = res.items || [];
 });
 
 const router = useRouter();
 const orderList = ref([]);
 const showTop = ref(false);
+const manage = ref(false);
+
+const getManage = () => {
+  manage.value = !manage.value;
+};
 
 const showPopup = () => {
   showTop.value = true;
@@ -124,6 +139,9 @@ const goCard = (id) => {
   router.push(`/card/${id}`);
 };
 
+const goLogistic = () => {
+  router.push("/logistic");
+};
 const iconList = [
   {
     id: 1,
@@ -219,18 +237,22 @@ const iconList = [
 .card {
   margin: 10px 0;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 .card-left {
   display: flex;
   align-items: flex-start;
   gap: 10px;
+  flex: 1;
+  min-width: 0; /* 关键：让 card-left 可以收缩 */
+  overflow: hidden;
 }
 .card-right {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
+  flex-shrink: 0;
 }
 .card-right p:first-child {
   font-weight: 600;
@@ -244,9 +266,17 @@ const iconList = [
   height: 100px;
   border-radius: 10px;
 }
+/* .info {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+} */
 .info p:first-child {
   font-weight: 600;
   font-size: 16px;
+  /* overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; */
 }
 .info p:nth-child(2) {
   font-size: 13px;
@@ -317,5 +347,33 @@ const iconList = [
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.delete {
+  background-color: white;
+  height: 60px;
+  width: 100%;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+}
+.delete :deep(.van-checkbox__label) {
+  color: #ff8001;
+  font-size: large;
+}
+.delete button {
+  background-color: #ff8001;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: white;
+}
+.address-list {
+  padding-bottom: 60px;
 }
 </style>

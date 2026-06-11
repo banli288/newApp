@@ -19,6 +19,12 @@ export function getUserOrder() {
     method: "get",
   });
 }
+export function getUserfollow() {
+  return request({
+    url: "/user/follows",
+    method: "get",
+  });
+}
 export function getUserFav(page = 1, limit = 10) {
   return request({
     url: "/user/favorites",
@@ -32,7 +38,12 @@ export function getProductDetail(id) {
     method: "get",
   });
 }
-
+export function getOrderLogistic(id) {
+  return request({
+    url: `/user/orders/{id}/logistics`,
+    method: "get",
+  });
+}
 //post
 export function postUserAddress(data) {
   return request({

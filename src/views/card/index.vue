@@ -134,7 +134,6 @@
         </div>
         {{ item.name }}
       </div>
-      <div></div>
     </div>
   </van-popup>
   <van-popup
@@ -151,7 +150,7 @@
         padding: 20px;
       "
     >
-      <div class="logo" v-for="item in forwardList" :key="item.id">
+      <div class="logoIcon" v-for="item in forwardList" :key="item.id">
         <div class="bg" style="background-color: white">
           <svg class="icon" aria-hidden="true">
             <use :xlink:href="item.icon"></use>
@@ -558,5 +557,23 @@ const forwardList = [
   height: 25px;
   width: 25px;
   background-color: #ffce96;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  font-size: 20px;
+  margin-top: 10px;
+}
+.bg {
+  background-color: #ffce96;
+  padding: 10px;
+  border-radius: 5px;
+}
+.logoIcon {
+  display: flex;
+}
+.icon {
+  font-size: 20px;
 }
 </style>
